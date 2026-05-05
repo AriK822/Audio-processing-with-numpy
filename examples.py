@@ -6,10 +6,15 @@ silent_audio = AudioType(length=5)
 
 print(my_audio.array) # Amplitude array
 print(my_audio.sr) # sample rate
+print(my_audio.length) # Length in seconds
 my_audio.volume = 0.9
 my_audio = my_audio.mono()
 my_audio = my_audio.stereo()
+print(my_audio.channels) # 1 if mono, 2 if stereo
+my_audio = my_audio.trim(5000, 67000)
+my_audio = my_audio.trim(None, 120000)
 my_audio.copy()
+my_audio.open("audio2.wav") # Opens and REPLACES a new audio file for this obj
 my_audio.save("new_audio.wav")
 
 

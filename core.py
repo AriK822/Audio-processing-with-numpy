@@ -29,6 +29,11 @@ class AudioType:
         self._volume = value
 
 
+    @property
+    def length(self):
+        return round(len(self.array) / self.sr, 3)
+
+
     def open(self, path:str):
         self.array, self.sr = sf.read(path)
 
@@ -58,6 +63,31 @@ class AudioType:
 
         result = self.copy()
         result.array = np.column_stack([result.array, result.array])
+        return result
+    
+
+    @property
+    def channels(self):
+        shape = self.array.shape
+        if len(shape) == 1: return 1
+        if shape[1] == 1: return 1
+        if shape[1] == 2: return 2
+        return None
+    
+
+    def trim(self, start_ms:int|float|None = None, end_ms:int|float|None = None) -> "AudioType":
+        result = self.copy()
+        if not start_ms and not end_ms:pass
+        elif not start_ms and end_ms:
+            e_index = int(end_ms / 1000 * self.sr)
+            result.array = result.array[:e_index]
+        elif not end_ms and start_ms:
+            s_index = int(start_ms / 1000 * self.sr)
+            result.array = result.array[s_index:]
+        elif start_ms and end_ms:
+            s_index = int(start_ms / 1000 * self.sr)
+            e_index = int(end_ms / 1000 * self.sr)
+            result.array = result.array[s_index:e_index]
         return result
     
 
@@ -98,9 +128,15 @@ class AudioEffects:
 
     
 
-    def merge(self, audio2:AudioType, volume1 = 0.5, volume2 = 0.5) -> AudioType:
+    def merge(self, audio2:AudioType, volume1 = 0.5, volume2 = 0.5, delay1_ms=0, delay2_ms=0) -> AudioType:
         array1, sr1 = self._audio_obj.array, self._audio_obj.sr
         array2, sr2 = audio2.array, audio2.sr
+
+        if delay1_ms != 0:
+            array1 = np.vstack([np.zeros((int(delay1_ms/1000*sr1), array1.shape[1])), array1])
+
+        if delay2_ms != 0:
+            array2 = np.vstack([np.zeros((int(delay2_ms/1000*sr2), array2.shape[1])), array2])
 
         if sr1 != sr2:
             audio2 = audio2.fx.sample_rate(sr1, True)
@@ -419,5 +455,12 @@ class Equalizer:
 
 if __name__ == "__main__":
     ...
+    a = AudioType("Audios/Lost soul down.wav")
+    # a = a.eq.gui()
+    print(a.channels)
+    # b = AudioType("Audios/Rarin - Mamacita.wav")
+
+    # result = a.fx.merge(b, 0.5, 0.5, 100000, 50000)
+    # result.save()
 
 

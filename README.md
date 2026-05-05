@@ -51,14 +51,19 @@ Create an AudioType obj. Name an existing wav file's path to open it, if no path
 ```Python
 from core import AudioType
 
+# Configuration
 my_audio = AudioType("Audios/Lost soul down.wav")
 silent_audio = AudioType(length=5)
 
 print(my_audio.array) # Amplitude array
 print(my_audio.sr) # sample rate
+print(my_audio.length) # Length in seconds
 my_audio.volume = 0.9
 my_audio = my_audio.mono()
 my_audio = my_audio.stereo()
+print(my_audio.channels) # 1 if mono, 2 if stereo
+my_audio = my_audio.trim(5000, 67000)
+my_audio = my_audio.trim(None, 120000)
 my_audio.copy()
 my_audio.open("audio2.wav") # Opens and REPLACES a new audio file for this obj
 my_audio.save("new_audio.wav")
@@ -136,6 +141,10 @@ from core import Equalizer
 eqed_a = Equalizer(a).custom_eq(100, 200)
 ```
 
+### Preview:
+The .eq.gui() method opens a GUI window like following:
+![Equalizer GUI](/previews/prev3.png)
+
 
 ## Visuals:
 View waveform and spectrums made from AudioType object.
@@ -172,9 +181,12 @@ Spectrums (amplitude / frequency):
 | `.open()` | `path: str` | Load new audio file |
 | `.save()` | `path: str="output.wav"` | Save to file |
 | `.copy()` | - | Return deep copy |
+| `.trim()` | `start_ms:int\|float\|None = None`, `end_ms:int\|float\|None = None` | Trim (cut) the audio file |
 | `.mono()` | - | Convert to mono (average channels) |
 | `.stereo()` | - | Convert to stereo (duplicate mono) |
+| `.channels` | - | channel count (mono = 1, stereo = 2) |
 | `.volume` | property getter/setter | Get or set volume multiplier |
+| `.length` | - | Audio length in seconds |
 
 ### Effects (via `.fx`)
 
@@ -183,7 +195,7 @@ Spectrums (amplitude / frequency):
 | `.stereo_effect()` | `speed_sec`, `decay` | `1, 1` | Stereo panning rotation |
 | `.speed()` | `new_speed` | `1` | Change playback speed |
 | `.sample_rate()` | `new_sr`, `same_length` | `, True` | Change sample rate |
-| `.merge()` | `audio2`, `volume1`, `volume2` | `, 0.5, 0.5` | Mix with another audio |
+| `.merge()` | `audio2`, `volume1`, `volume2`, `delay1_ms`, `delay2_ms` | `, 0.5, 0.5, 0, 0` | Mix with another audio |
 | `.tremolo()` | `rate_hz` | `10` | Volume modulation |
 | `.reverse()` | - | - | Reverse audio |
 | `.noise()` | `intensity`, `max_offset` | `0.1, 10` | Add glitch noise |
