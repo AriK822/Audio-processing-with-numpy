@@ -59,7 +59,7 @@ class AudioType:
 
 
     def stereo(self) -> "AudioType":
-        if len(self.array.shape) == 2: return self.copy()
+        if len(self.array.shape) == 2 and self.array.shape[1]==2: return self.copy()
 
         result = self.copy()
         result.array = np.column_stack([result.array, result.array])
@@ -307,6 +307,120 @@ class GenerateAudio:
         return result
     
 
+    def morse_code(self, text:str, unit_ms:int = 100, frequency = 800,
+                   print_code = True, keep_length = False) -> AudioType:
+        MORSE_CODE = {
+            # Letters A-Z
+            'A': '.-',
+            'B': '-...',
+            'C': '-.-.',
+            'D': '-..',
+            'E': '.',
+            'F': '..-.',
+            'G': '--.',
+            'H': '....',
+            'I': '..',
+            'J': '.---',
+            'K': '-.-',
+            'L': '.-..',
+            'M': '--',
+            'N': '-.',
+            'O': '---',
+            'P': '.--.',
+            'Q': '--.-',
+            'R': '.-.',
+            'S': '...',
+            'T': '-',
+            'U': '..-',
+            'V': '...-',
+            'W': '.--',
+            'X': '-..-',
+            'Y': '-.--',
+            'Z': '--..',
+            
+            # Numbers 0-9
+            '0': '-----',
+            '1': '.----',
+            '2': '..---',
+            '3': '...--',
+            '4': '....-',
+            '5': '.....',
+            '6': '-....',
+            '7': '--...',
+            '8': '---..',
+            '9': '----.',
+            
+            # Common punctuation
+            ' ': '',
+            '.': '.-.-.-',
+            ',': '--..--',
+            '?': '..--..',
+            '!': '-.-.--',
+            '/': '-..-.',
+            '(': '-.--.',
+            ')': '-.--.-',
+            '&': '.-...',
+            ':': '---...',
+            ';': '-.-.-',
+            '=': '-...-',
+            '+': '.-.-.',
+            '-': '-....-',
+            '_': '..--.-',
+            '"': '.-..-.',
+            "'": '.----.',
+            '@': '.--.-.',
+            
+            # Prosigns (common special sequences)
+            'AR': '.-.-.',      # End of message
+            'AS': '.-...',      # Wait
+            'BT': '-...-',      # Break
+            'SK': '...-.-',     # End of contact
+            'SN': '...-.',      # Understood
+        }
+    
+        code_text = ""
+        text = text.upper()
+        for c in text:
+            code = MORSE_CODE.get(c)
+            if code is None:
+                raise ValueError(f"Incorrect value for text argument: {c}")
+            else:
+                code_text += code
+                code_text += '/'
+
+        if print_code:
+            print(code_text)
+
+        indicator = '0000000'.join(
+            ['000'.join(
+                ['0'.join(
+                    ['1' if i == "." else "111" for i in c]) for c in word.split('/')
+                ]) 
+                for word in code_text.split("//")
+            ])
+
+        unit_sr = int(unit_ms / 1000 * self._audio_obj.sr)
+        result_array = np.zeros((len(indicator) *  unit_sr + 1, 1))
+        frequency_array = \
+            np.sin(np.arange(len(result_array)) * np.pi * 2 / self._audio_obj.sr * frequency).reshape(-1, 1)
+        
+        array_index = 0
+        for i in indicator:
+            if i == "1":
+                result_array[array_index:array_index+unit_sr] = frequency_array[array_index:array_index+unit_sr]
+            array_index += unit_sr
+
+        result = self._audio_obj.copy()
+
+        if keep_length:
+            result.array[:len(result.array) if len(result.array) < len(result_array) else len(result_array)] = \
+                result_array[:len(result.array) if len(result.array) < len(result_array) else len(result_array)]
+            return result
+        
+        result.array = result_array
+        return result
+        
+
 
 class Visuals:
     def __init__(self, audio_obj: AudioType):
@@ -455,12 +569,11 @@ class Equalizer:
 
 if __name__ == "__main__":
     ...
-    a = AudioType("Audios/Lost soul down.wav")
-    # a = a.eq.gui()
-    print(a.channels)
-    # b = AudioType("Audios/Rarin - Mamacita.wav")
+    # a = AudioType("Audios/Lost soul down.wav")
+    # b = AudioType().generate.morse_code("Hi. This is a random text to do some cool Shit!")
 
-    # result = a.fx.merge(b, 0.5, 0.5, 100000, 50000)
-    # result.save()
+    # b = a.stereo().fx.pitch(0.7)
+
+    # b.save()
 
 

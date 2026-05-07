@@ -112,8 +112,8 @@ Examples:
 ```Python
 a = AudioType(length=30, sr = 44100)
 a = a.generate.frequency(rate_hz=1000)
-b = a.generate.noise()
-result = a.fx.merge(b)
+a = a.generate.noise()
+a = a.generate.morse_code("Morse code!")
 
 # Method 2:
 from core import GenerateAudio
@@ -217,6 +217,7 @@ Spectrums (amplitude / frequency):
 |--------|------------|---------|-------------|
 | `.frequency()` | `rate_hz` | `1000` | Generate sine wave |
 | `.noise()` | - | - | Generate white noise |
+| `.morse_code()` | `text:str, unit_ms:int, frequency, print_code, keep_length` | `, 100, 800, True, False` | Generate morse code |
 
 ### Equalizer (via `.eq`)
 
